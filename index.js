@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 require("dotenv").config()
@@ -26,16 +26,59 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+
+
+    // start 
+
+    const serviceCollection = client.db("carDoctorDB").collection("services");
+    const bookingCollection = client.db("carDoctorDB").collection("bookingService");
+
+
+    // get service dekhar jnne
+
+    app.get("/services", async (req, res) => {
+      const cursor = serviceCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+    //to get single service details
+    app.get("/services/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      const options = {
+        projection: { _id: 1, title: 1, price: 1, service_id: 1, img: 1 }
+      }
+      const result = await serviceCollection.findOne(query, options);
+      res.send(result);
+    })
+
+
+    // to book 1 service
+
+    app.post("/bookings", async (req, res) => {
+      const booking = req.body;
+      const result = await bookingCollection.insertOne(booking);
+      res.send(result)
+    })
+
+
+
+
+
+
+
+
+
+
+
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
 
 
 
-
-
-
-    
     // await client.close();
   }
 }
@@ -44,11 +87,11 @@ run().catch(console.dir);
 
 
 
-app.get("/", (req,res)=>{
-    res.send("car-doctor server is running")
+app.get("/", (req, res) => {
+  res.send("car-doctor server is running")
 })
 
 
-app.listen(port, ()=>{
-    console.log(`car-doctor server is running on ${port}`);
+app.listen(port, () => {
+  console.log(`car-doctor server is running on ${port}`);
 })
